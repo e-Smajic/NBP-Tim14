@@ -1,4 +1,10 @@
 package ba.unsa.etf.confix_be.payloads.request.search;
 
-public class ComponentSearchRequestDto {
+import ba.unsa.etf.confix_be.core.model.BaseSearchObject;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class ComponentSearchRequestDto extends BaseSearchObject<Long> {
 }
