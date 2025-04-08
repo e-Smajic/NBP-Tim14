@@ -1,0 +1,4 @@
+package ba.unsa.etf.confix_be.payloads.response;
+
+public class ComponentResponseDto {
+}
