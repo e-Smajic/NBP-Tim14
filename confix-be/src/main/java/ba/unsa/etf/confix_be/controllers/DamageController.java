@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Getter
 @RestController
 @RequestMapping("/api/damages")
-@Tag(name = "cedex", description = "Damage codes controller")
+@Tag(name = "damages", description = "Damage codes controller")
 @RequiredArgsConstructor
 public class DamageController implements BaseCRUDController<DamageEntity, DamageResponseDto, DamageSearchRequestDto, DamageInsertRequestDto, DamageUpdateRequestDto, Long> {
     private final DamageService service;

@@ -21,6 +21,8 @@ import lombok.ToString;
  */
 
 @MappedSuperclass
+@Getter
+@Setter
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public abstract class AutoIdBaseEntity extends BaseEntity {
