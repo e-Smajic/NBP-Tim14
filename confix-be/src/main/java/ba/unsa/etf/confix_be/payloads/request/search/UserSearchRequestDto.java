@@ -6,5 +6,5 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairSearchRequestDto extends BaseSearchObject<Long> {
+public class UserSearchRequestDto extends BaseSearchObject<Long> {
 }
