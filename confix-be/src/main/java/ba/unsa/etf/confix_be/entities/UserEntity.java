@@ -1,6 +1,7 @@
 package ba.unsa.etf.confix_be.entities;
 
 import ba.unsa.etf.confix_be.core.entities.AbstractEntity;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,5 +39,12 @@ public class UserEntity extends AbstractEntity {
     private LocalDate birthDate;
 
     @Column(name = "address_id", columnDefinition = "NUMBER")
+    @Nullable
     private Long addressId;
+
+    @Column(name = "role_id", columnDefinition = "NUMBER")
+    private Long roleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private RoleEntity role;
 }

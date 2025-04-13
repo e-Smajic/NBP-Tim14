@@ -1,5 +1,6 @@
 package ba.unsa.etf.confix_be.payloads.request.insert;
 
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
@@ -28,7 +29,8 @@ public class UserInsertRequestDto {
 
     private LocalDate birthDate;
 
-    private String addressId;
+    @Nullable
+    private Long addressId;
 
-    private String roleId;
+    private Long roleId;
 }
