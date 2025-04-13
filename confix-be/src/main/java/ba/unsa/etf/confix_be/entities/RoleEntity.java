@@ -1,5 +1,6 @@
 package ba.unsa.etf.confix_be.entities;
 
+import ba.unsa.etf.confix_be.core.entities.AbstractEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +9,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "nbp_role", schema = "nbp")
-public class RoleEntity {
+public class RoleEntity extends AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
