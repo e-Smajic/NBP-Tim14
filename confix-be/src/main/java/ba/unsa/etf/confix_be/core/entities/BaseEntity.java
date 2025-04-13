@@ -3,6 +3,7 @@ package ba.unsa.etf.confix_be.core.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PreRemove;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
@@ -42,4 +43,22 @@ public abstract class BaseEntity extends AbstractEntity {
     @LastModifiedDate
     @Column(name = "updated")
     private Instant updated;
+
+    /**
+     * Timestamp indicating when the entity was marked as deleted.
+     * It's set when an entity is removed without being physically
+     * deleted from the database.
+     */
+    @Column(name = "deleted")
+    private Instant deletedAt;
+
+    /**
+     * Lifecycle callback to mark an entity as deleted.
+     * The {@link #deletedAt} timestamp is set with the current time
+     * when an entity is about to be removed.
+     */
+    @PreRemove
+    private void preRemove() {
+        this.deletedAt = Instant.now();
+    }
 }

@@ -1,7 +1,6 @@
 package ba.unsa.etf.confix_be.services;
 
 import ba.unsa.etf.confix_be.core.services.BaseCRUDService;
-import ba.unsa.etf.confix_be.core.services.BaseService;
 import ba.unsa.etf.confix_be.entities.DamageEntity;
 import ba.unsa.etf.confix_be.mappers.DamageMapper;
 import ba.unsa.etf.confix_be.payloads.request.insert.DamageInsertRequestDto;

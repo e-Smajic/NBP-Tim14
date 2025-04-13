@@ -1,6 +1,7 @@
 package ba.unsa.etf.confix_be.core.services;
 
 import ba.unsa.etf.confix_be.core.entities.AbstractEntity;
+import ba.unsa.etf.confix_be.core.entities.BaseEntity;
 import ba.unsa.etf.confix_be.core.exceptions.NotFoundException;
 import ba.unsa.etf.confix_be.core.localization.MessageUtil;
 import ba.unsa.etf.confix_be.core.mappers.BaseMapper;
@@ -139,11 +140,12 @@ public interface BaseService<E extends AbstractEntity, DTO, SObject extends Base
      */
     private E findEntityById(T id, SearchObjectAdditionalData search) {
         E entity = getRepository().findById(id).orElse(null);
-
-        if (search.getDeleted() == ListDeletedEnum.DELETED && entity != null && entity.getDeletedAt() != null) {
-            return null;
-        } else if (search.getDeleted() == ListDeletedEnum.NOT_DELETED && entity != null && entity.getDeletedAt() == null) {
-            return null;
+        if(entity instanceof BaseEntity baseEntity) {
+            if (search.getDeleted() == ListDeletedEnum.DELETED && baseEntity.getDeletedAt() != null) {
+                return null;
+            } else if (search.getDeleted() == ListDeletedEnum.NOT_DELETED && baseEntity.getDeletedAt() == null) {
+                return null;
+            }
         }
 
         return entity;

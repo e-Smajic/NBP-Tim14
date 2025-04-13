@@ -1,6 +1,5 @@
 package ba.unsa.etf.confix_be.entities;
 
-import ba.unsa.etf.confix_be.core.entities.AbstractEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
