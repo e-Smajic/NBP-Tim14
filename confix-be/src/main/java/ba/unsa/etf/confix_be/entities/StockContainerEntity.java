@@ -1,9 +1,7 @@
 package ba.unsa.etf.confix_be.entities;
 
 import ba.unsa.etf.confix_be.core.entities.AutoIdBaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +18,9 @@ import java.time.LocalDate;
 public class StockContainerEntity extends AutoIdBaseEntity {
     @Column(name = "container_id")
     private Long containerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "container_id", insertable = false, updatable = false)
+    private ContainerEntity container;
 
     @Column(name = "arrival_date")
     private LocalDate arrivalDate;
