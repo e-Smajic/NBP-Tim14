@@ -1,10 +1,8 @@
 package ba.unsa.etf.confix_be.entities;
 
 import ba.unsa.etf.confix_be.core.entities.AutoIdBaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +16,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerEntity extends AutoIdBaseEntity {
     @Column(name = "container_number")
+    @Nullable
     private String containerNumber;
 
     @Column(name = "container_type")
@@ -31,4 +30,7 @@ public class ContainerEntity extends AutoIdBaseEntity {
 
     @Column(name = "owner_id")
     private Long ownerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    private UserEntity ownerUser; // owner is reserved for the string property above, hence ownerUser.
 }

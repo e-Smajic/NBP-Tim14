@@ -33,9 +33,11 @@ public class UserEntity extends AbstractEntity {
     private String password;
 
     @Column(name = "phone_number", columnDefinition = "VARCHAR2(20)")
+    @Nullable
     private String phoneNumber;
 
     @Column(name = "birth_date", columnDefinition = "DATE")
+    @Nullable
     private LocalDate birthDate;
 
     @Column(name = "address_id", columnDefinition = "NUMBER")
@@ -44,7 +46,7 @@ public class UserEntity extends AbstractEntity {
 
     @Column(name = "role_id", columnDefinition = "NUMBER")
     private Long roleId;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false, nullable = false)
     private RoleEntity role;
 }
