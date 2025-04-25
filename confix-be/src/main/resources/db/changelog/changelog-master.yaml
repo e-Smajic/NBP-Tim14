@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/initial_data_migration.sql
+  - include:
+      file: db/changelog/changes/initial_data_migration_with_fks.sql
