@@ -1,119 +1,149 @@
 package ba.unsa.etf.confix_be.core.config;
 
+import ba.unsa.etf.confix_be.core.security.CustomPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.*;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
-/**
- * Security configuration.
- */
 @Configuration
-@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    /**
-     * List of endpoints that are permitted without authentication.
-     */
-    private static final String[] AUTH_WHITELIST = {
-            // -- Swagger UI v2
-            "/v2/api-docs",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/configuration/ui",
-            "/configuration/security",
-            "/swagger-ui.html",
-            "/webjars/**",
-            // -- Swagger UI v3 (OpenAPI)
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/public/**",
-            "/api-docs/**",
-            "/uploads/**",
-            "/tracking-link/**",
-            // other public endpoints of your API may be appended to this array
+  private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+  private static final String[] AUTH_WHITELIST = {
+      // -- Swagger UI v2
+      "/v2/api-docs",
+      "/swagger-resources",
+      "/swagger-resources/**",
+      "/configuration/ui",
+      "/configuration/security",
+      "/swagger-ui.html",
+      "/webjars/**",
+      // -- Swagger UI v3 (OpenAPI)
+      "/v3/api-docs/**",
+      "/swagger-ui/**",
+      "/public/**",
+      "/api-docs/**",
+      "/uploads/**",
+      "/tracking-link/**",
+      "/api/auth/login",
+      "/api/auth/register",
+      "/api/auth/forgot-password", "/api/auth/reset-password"
+  };
+
+  @Value("${secretKey}")
+  private String secret;
+  @Value("${cors.allowed-origins}")
+  private String[] allowedOrigins;
+  @Value("${cors.allowed-headers}")
+  private String[] allowedHeaders;
+  @Value("${cors.allowed-methods}")
+  private String[] allowedMethods;
+
+  /* ────────── TOKEN VALIDATION ────────── */
+
+  @Bean
+  JwtDecoder jwtDecoder() {
+    SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+    return NimbusJwtDecoder
+        .withSecretKey(key)
+        .macAlgorithm(MacAlgorithm.HS512)
+        .build();
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(10);
+  }
+
+  @Bean
+  public BearerTokenResolver bearerTokenResolver() {
+    return new CookieBearerTokenResolver();
+  }
+
+  /**
+   * Converts a raw Jwt into an Authentication whose principal is our
+   * CustomPrincipal.
+   */
+  private Converter<Jwt, ? extends AbstractAuthenticationToken> customJwtAuthConverter() {
+    return jwt -> {
+      @SuppressWarnings("unchecked")
+      Map<String, List<String>> perms = (Map<String, List<String>>) jwt.getClaim("permissions");
+
+      var authz = perms.values().stream()
+          .flatMap(Collection::stream)
+          .map(p -> new SimpleGrantedAuthority("PERM_" + p.toUpperCase()))
+          .collect(Collectors.toSet());
+
+      Long uid = ((Number) jwt.getClaim("uid")).longValue();
+      String user = jwt.getSubject();
+      String email = jwt.getClaimAsString("email");
+      CustomPrincipal principal = new CustomPrincipal(uid, user, email, perms);
+
+      return new UsernamePasswordAuthenticationToken(principal, jwt, authz);
     };
-    /**
-     * Secret key used to encode and decode JWT.
-     */
-    @Value("${secretKey}")
-    private String secretKey;
+  }
 
-    @Value("${cors.allowed-origins}")
-    private String[] allowedOrigins;
+  /* ────────── HTTP SECURITY ────────── */
 
-    @Value("${cors.allowed-headers}")
-    private String[] allowedHeaders;
+  @Bean
+  SecurityFilterChain api(HttpSecurity http) throws Exception {
+    http
+        .cors(c -> c.configurationSource(cors()))
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/login", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+            .requestMatchers(AUTH_WHITELIST).permitAll()
+            .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth2 -> oauth2
+            .bearerTokenResolver(bearerTokenResolver())
+            .jwt(jwt -> jwt.jwtAuthenticationConverter(customJwtAuthConverter())));
+    return http.build();
+  }
 
-    @Value("${cors.allowed-methods}")
-    private String[] allowedMethods;
+  @Bean
+  AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+    return cfg.getAuthenticationManager();
+  }
 
-    /**
-     * Configure security, allow white listed endpoints and require authentication for the rest.
-     *
-     * @param http security
-     * @return security filter chain
-     * @throws Exception exception
-     */
-    @Bean
-    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        http
-                .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .anyRequest().permitAll()
-                );
+  /* ── CORS ────────────────────────────────────────── */
+  @Bean
+  CorsConfigurationSource cors() {
+    CorsConfiguration cfg = new CorsConfiguration();
 
-        return http.build();
-    }
+    cfg.addAllowedOriginPattern("*");
+    cfg.setAllowCredentials(true);
 
-    private CorsConfigurationSource corsConfigurationSource() {
-        // CORS configuration
-        // TODO: Update allowed origins, methods, headers, and max age -
-        //  take value from application.properties (nest sprint)
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of(allowedOrigins));
-        corsConfiguration.setAllowedMethods(List.of(allowedMethods));
-        //corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setAllowedHeaders(List.of(allowedHeaders));
-        corsConfiguration.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-        return source;
-    }
+    cfg.addAllowedHeader("*");
+    cfg.addAllowedMethod("*");
+    cfg.setMaxAge(3600L);
 
-    /**
-     * JWT decoder, used to decode JWT with HS256 signature algorithm.
-     *
-     * @return JWT decoder
-     */
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        SecretKey secretKeyObj = new SecretKeySpec(this.secretKey.getBytes(), "HMACSHA256");
-        // JWT with HS256 signature algorithm
-        JwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeyObj)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-        return new JwtDecoder() {
-            @Override
-            public Jwt decode(String token) {
-                return jwtDecoder.decode(token);
-            }
-        };
-    }
+    UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+    src.registerCorsConfiguration("/**", cfg);
+    return src;
+  }
+
 }

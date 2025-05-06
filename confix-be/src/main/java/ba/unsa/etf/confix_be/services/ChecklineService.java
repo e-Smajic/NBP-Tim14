@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 @Getter
 @Service
 @RequiredArgsConstructor
-public class ChecklineService implements BaseCRUDService<ChecklineEntity, ChecklineResponseDto, ChecklineSearchRequestDto, ChecklineInsertRequestDto, ChecklineUpdateRequestDto, Long> {
+public class ChecklineService implements
+        BaseCRUDService<ChecklineEntity, ChecklineResponseDto, ChecklineSearchRequestDto, ChecklineInsertRequestDto, ChecklineUpdateRequestDto, Long> {
     private final ChecklineRepository repository;
     private final ChecklineMapper mapper;
     private final EntityManager entityManager;
