@@ -8,5 +8,6 @@ import ba.unsa.etf.confix_be.payloads.response.ChecklineResponseDto;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface ChecklineMapper extends BaseCRUDMapper<ChecklineEntity, ChecklineResponseDto, ChecklineInsertRequestDto, ChecklineUpdateRequestDto> {
+public interface ChecklineMapper extends
+        BaseCRUDMapper<ChecklineEntity, ChecklineResponseDto, ChecklineInsertRequestDto, ChecklineUpdateRequestDto> {
 }

@@ -11,5 +11,6 @@ import org.mapstruct.Mapper;
  * Mapper for {@link RoleEntity} and {@link RoleResponseDto}.
  */
 @Mapper(componentModel = "spring")
-public interface RoleMapper extends BaseCRUDMapper<RoleEntity, RoleResponseDto, RoleInsertRequestDto, RoleUpdateRequestDto> {
+public interface RoleMapper
+        extends BaseCRUDMapper<RoleEntity, RoleResponseDto, RoleInsertRequestDto, RoleUpdateRequestDto> {
 }

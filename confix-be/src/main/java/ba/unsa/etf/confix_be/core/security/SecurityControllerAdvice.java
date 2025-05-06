@@ -1,28 +1,34 @@
 package ba.unsa.etf.confix_be.core.security;
 
-import com.nimbusds.jose.shaded.gson.internal.LinkedTreeMap;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
+import java.util.Map;
 
-/**
- * Custom principal object that contains the user's email, company, and permissions.
- * This object is used to inject the user's information into the controller methods.
- */
-@RestControllerAdvice(basePackages = {"ba.unsa.etf.confix_be"})
+@RestControllerAdvice(basePackages = "ba.unsa.etf.confix_be")
 public class SecurityControllerAdvice {
 
     @ModelAttribute
-    public CustomPrincipal customPrincipal(Authentication auth){
+    public CustomPrincipal customPrincipal(Authentication auth) {
         if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
+            // 1) userId was stored under "uid"
+            Number uidNum = jwt.getClaim("uid");
+            Long userId = uidNum != null ? uidNum.longValue() : null;
+
+            // 2) username is the JWT subject
+            String username = jwt.getSubject();
+
+            // 3) email claim
             String email = jwt.getClaimAsString("email");
-            Long orgId = Long.valueOf(jwt.getClaimAsString("company"));
-            Long id = Long.parseLong(jwt.getClaim("sub"));
-            LinkedTreeMap<String, List<String>> permissions = jwt.getClaim("permissions");
-            return new CustomPrincipal(email, orgId, permissions, id);
+
+            // 4) permissions map
+            @SuppressWarnings("unchecked")
+            Map<String, List<String>> perms = (Map<String, List<String>>) jwt.getClaim("permissions");
+
+            return new CustomPrincipal(userId, username, email, perms);
         }
         return null;
     }
